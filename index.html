@@ -1,0 +1,100 @@
+
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Anotações Online</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Anotações Online</h1>
+
+      <textarea id="texto" placeholder="Digite sua anotação..."></textarea>
+      <button id="btnAdicionar">Adicionar</button>
+
+      <div id="lista"></div>
+    </div>
+
+    <script type="module">
+      // IMPORTS FIREBASE
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        push,
+        onValue,
+        remove,
+      } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+
+      // CONFIG DO SEU PROJETO
+    const firebaseConfig = {
+  apiKey: "AIzaSyCLE1lKPQvTOkkEPg2oN2a4ZFYqC7cgM1M",
+  authDomain: "projetosenai-ee8eb.firebaseapp.com",
+  databaseURL: "https://projetosenai-ee8eb-default-rtdb.firebaseio.com",
+  projectId: "projetosenai-ee8eb",
+  storageBucket: "projetosenai-ee8eb.firebasestorage.app",
+  messagingSenderId: "804107745994",
+  appId: "1:804107745994:web:1604c134dde247a1dc1233",
+  measurementId: "G-VS2F2VKVT3"
+};
+
+      // Inicializa Firebase
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+
+      // Referência do banco
+      const anotacoesRef = ref(database, "anotacoes");
+
+      // Adicionar anotação
+      document.getElementById("btnAdicionar").addEventListener("click", () => {
+        const texto = document.getElementById("texto").value.trim();
+
+        if (texto === "") {
+          alert("Digite uma anotação!");
+          return;
+        }
+
+        push(anotacoesRef, {
+          texto: texto,
+          data: new Date().toLocaleString(),
+        });
+
+        document.getElementById("texto").value = "";
+      });
+
+      // Escutar mudanças em tempo real
+      onValue(anotacoesRef, (snapshot) => {
+        const lista = document.getElementById("lista");
+        lista.innerHTML = "";
+
+        snapshot.forEach((child) => {
+          const dado = child.val();
+          const id = child.key;
+
+          const div = document.createElement("div");
+          div.classList.add("anotacao");
+
+          const p = document.createElement("p");
+          p.textContent = dado.texto; // protegido contra XSS
+
+          const small = document.createElement("small");
+          small.textContent = dado.data;
+
+          const btnExcluir = document.createElement("button");
+          btnExcluir.textContent = "Excluir";
+          btnExcluir.onclick = () => {
+            remove(ref(database, "anotacoes/" + id));
+          };
+
+          div.appendChild(p);
+          div.appendChild(small);
+          div.appendChild(btnExcluir);
+
+          lista.appendChild(div);
+        });
+      });
+    </script>
+  </body>
+</html>
